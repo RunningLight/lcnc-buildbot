@@ -1,0 +1,349 @@
+# ex: set syntax=python:
+
+# This is the buildmaster config file for the Unified Build Candidate Project for
+# LinuxCNC. It must be installed as 'master.cfg' in your buildmaster's base directory.
+# 
+# Author: Kent A Reed, based on master.cfg.sample file included in BuildBot distro
+#
+# Version 1 (I don't like 'point' versions for configuration files): 
+# In this version, everything is done explicitly. No cleverness with
+# variables, builders, with Python scripts, with most anything. Mostly I ignored the 
+# "fleet" of predefined buildStep Classes/commands and used shell scripts.
+#
+# This version is hardwired to the unified-build-candidate-3 branch on 
+# git://git.linuxcnc.org/git/linuxcnc.git
+#                
+# Create the dictionary that the buildmaster pays attention to. We also use
+# a shorter alias to save typing.
+
+c = BuildmasterConfig = {}
+
+####### BUILDSLAVES
+
+# The 'slaves' list defines the set of recognized buildslaves. Each element is
+# a BuildSlave object, specifying a unique slave name and password.  The same
+# slave name and password must be configured on the slave.
+# note: max_builds= is used to limit the cpu burden. The host may be capable of more
+# note: no harm to define some "future" slaves which don't exist yet
+
+from buildbot.buildslave import BuildSlave
+c['slaves'] = [
+               BuildSlave("jessie-rtpreempt-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("jessie-rtpreempt-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("jessie-xenomai-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("jessie-xenomai-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("precise-rtpreempt-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("precise-rtpreempt-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("precise-xenomai-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("precise-xenomai-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("raring-xenomai-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("raring-xenomai-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("raring-rtpreempt-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("raring-rtpreempt-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("wheezy-xenomai-amd64-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("wheezy-xenomai-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("wheezy-rtpreempt-amd64-vm1",*bspasswd*, max_builds=1),
+               BuildSlave("wheezy-rtpreempt-i386-vm1", *bspasswd*, max_builds=1),
+               BuildSlave("wheezy-xenomai-armv7l-bbb1", *bspasswd*, max_builds=1),
+              ]
+
+
+# 'slavePortnum' defines the TCP port to listen on for connections from slaves.
+#  The default is 9989. This must match the value configured into the buildslaves 
+#  (with their --master option)
+
+c['slavePortnum'] = 9989
+
+####### CHANGESOURCES
+
+# the 'change_source' setting tells the buildmaster how it should find out
+# about source code changes.  Here we poll the unified-build-candidate-3 branch
+# of the linuxcnc git repo every 5 minutes
+# note: there can be only one GitPoller pointing at a given repository
+
+from buildbot.changes.gitpoller import GitPoller
+c['change_source'] = []
+c['change_source'].append(GitPoller(
+        'git://git.linuxcnc.org/git/linuxcnc.git',
+        workdir='gitpoller-workdir', branch='unified-build-candidate-3',
+        pollinterval=300))
+
+####### SCHEDULERS
+
+# Configure the Schedulers, which decide how to react to incoming changes.  In this
+# version, just trigger a cycle of build and runtests on the branch. 
+# Note we also support forced builds.
+# treeStableTimer determines how long after the last detected change the scheduler waits
+# before triggering the builders.
+# note: here we can't define "future" builders; gives buildbot a tummy ache
+
+from buildbot.schedulers.basic import SingleBranchScheduler
+from buildbot.schedulers.forcesched import ForceScheduler
+from buildbot.changes import filter
+c['schedulers'] = []
+c['schedulers'].append(SingleBranchScheduler(
+                            name="all",
+                            change_filter=filter.ChangeFilter(branch='unified-build-candidate-3'),
+                            treeStableTimer=600,
+                            builderNames=[
+                                          "jessie-rtpreempt-amd64",
+                                          "jessie-rtpreempt-i386",
+                                          "jessie-xenomai-amd64",
+                                          "jessie-xenomai-i386",
+#                                          "precise-rtpreempt-amd64",
+#                                          "precise-rtpreempt-i386",
+#                                          "precise-xenomai-amd64",
+#                                          "precise-xenomai-i386",
+                                          "raring-xenomai-amd64",
+                                          "raring-xenomai-i386",
+#                                         "raring-rtpreempt-amd64",
+#                                         "raring-rtpreempt-i386",
+                                          "wheezy-rtpreempt-amd64",
+                                          "wheezy-rtpreempt-i386",
+                                          "wheezy-xenomai-amd64",
+                                          "wheezy-xenomai-i386",
+                                          "wheezy-xenomai-armv7l"
+                                         ] ))
+c['schedulers'].append(ForceScheduler(
+                            name="force",
+                            builderNames=[
+                                          "jessie-rtpreempt-amd64",
+                                          "jessie-rtpreempt-i386",
+                                          "jessie-xenomai-amd64",
+                                          "jessie-xenomai-i386",
+#                                          "precise-rtpreempt-amd64",
+#                                          "precise-rtpreempt-i386",
+#                                          "precise-xenomai-amd64",
+#                                          "precise-xenomai-i386",
+#                                          "raring-rtpreempt-amd64",
+#                                          "raring-rtpreempt-i386",
+                                          "raring-xenomai-amd64",
+                                          "raring-xenomai-i386",
+                                          "wheezy-rtpreempt-amd64",
+                                          "wheezy-rtpreempt-i386",
+                                          "wheezy-xenomai-amd64",
+                                          "wheezy-xenomai-i386",
+                                          "wheezy-xenomai-armv7l"
+                                         ] ))
+
+####### BUILDERS
+
+# The 'builders' list defines the Builders, which tell Buildbot how to perform a build:
+# what steps, and which slaves can execute them.  Note that any particular build will
+# only take place on one slave.
+
+from buildbot.process.factory import BuildFactory
+from buildbot.steps.source.git import Git
+from buildbot.steps.shell import ShellCommand
+
+# in this version, the following ubcfactory is just a list of explicitly defined steps
+# like the man said, there's more than one way to do this.
+# note: all the buildSteps can have a descriptionDone parameter but I found it hard
+#       to word them so they made sense on failures as well as successes
+
+ubcfactory = BuildFactory()
+
+# fetch into the repo if it already exists in the 'buildir' subdir; else clone a fresh repo 
+
+ubcfactory.addStep(ShellCommand(name="init", description=["fetch into", "or clone", "repository", "as needed"], command=["/bin/bash", "-c", "if [ -d linuxcnc.git ]; then (cd linuxcnc.git; git fetch origin +refs/heads/*:refs/heads/*; echo fetched); else git clone --bare git://git.linuxcnc.org/git/linuxcnc.git linuxcnc.git; fi;"], workdir=".", env={"LS_COLORS":""}, haltOnFailure=True))
+
+
+# remove old contents of working subdirectory
+# notes:
+# 1. working subdir 'build' is created by default, but let's test for it just in case
+# 2. gotta run in shell to use wildcard
+
+ubcfactory.addStep(ShellCommand(name="clear", description=["clear", "working", "directory"], command=["/bin/bash", "-c", "if [ -d build ]; then rm -rf build/*; else mkdir build; echo recreated builddir; fi;"], workdir=".", env={"LS_COLORS":""}, haltOnFailure=True))
+
+# populate working subdirectory from the repo
+# note: gotta run in shell to use pipe, yada yada, yada
+
+ubcfactory.addStep(ShellCommand(name="git", description=["populate", "working", "directory"], command=["/bin/bash", "-c", "(cd linuxcnc.git; git archive unified-build-candidate-3) | tar xCf build -"], workdir=".", env={"LS_COLORS":""}, haltOnFailure=True))
+
+# read and clear dmesg ring buffer to aid in debugging failed builds
+# note: fails if buildslave user doesn't have passwordless permission to run 'sudo /bin/dmesg'
+
+ubcfactory.addStep(ShellCommand(name="dmesg", description=["read and", "clear","dmesg","buffer"], command=["sudo","/bin/dmesg","-c"], env={"LS_COLORS":""}))
+
+# report some useful info back to the buildmaster
+
+ubcfactory.addStep(ShellCommand(name="environment",description=["collect","environment", "info"], command=["/bin/bash", "-c", "echo 'uname -a:'; uname -a; echo; echo 'ulimit -a:'; ulimit -a; echo; echo 'git --version:'; git --version; echo; echo 'gcc --version:'; gcc --version; echo; echo 'python -V:'; python -V; echo; echo 'lsb_release --all:'; lsb_release --all; echo; echo 'lsmod:'; lsmod; echo; echo 'dpkg --get-selections:'; dpkg --get-selections;"], env={"LS_COLORS":""}))
+
+# autogen needed build files
+
+ubcfactory.addStep(ShellCommand(name="autogen", description="autogen", command=["./autogen.sh"], workdir="build/src", env={"LS_COLORS":""}, haltOnFailure=True))
+
+# configure the build process - use default options here
+
+ubcfactory.addStep(ShellCommand(name="configure", description="configure", command=["./configure"], workdir="build/src", env={"LS_COLORS":""}, haltOnFailure=True))
+
+# initialize the make process
+
+ubcfactory.addStep(ShellCommand(name="make", description="make", command=["make", "V=1"], workdir="build/src", env={"LS_COLORS":""}, haltOnFailure=True))
+
+# finally, set proper permissions on executables
+# note: fails if buildslave user doesn't have passwordless permission to run 'sudo /usr/bin/make'
+
+ubcfactory.addStep(ShellCommand(name="setuid", description=["make","setuid"], command=["sudo", "/usr/bin/make", "setuid"], workdir="build/src", env={"LS_COLORS":""}, haltOnFailure=True))
+
+# run the runtests in the default realtime environment
+
+ubcfactory.addStep(ShellCommand(name="runtests", description="runtests", command=["/bin/bash","-c","source ./scripts/rip-environment; runtests -v"], workdir="build", env={"LS_COLORS":""}))
+
+# read dmesg ring buffer again in case anything useful was logged 
+
+ubcfactory.addStep(ShellCommand(name="closeout", description=["read","dmesg","buffer"], command=["/bin/dmesg"], workdir="build", env={"LS_COLORS":""}))
+
+# finally, define builders. Each associates a buildfactory with one or more buildslaves.
+# note: category= is used to segregate builders still in test from production builders
+#                 haven't used this yet
+# note: can't define "future" builders; seems to give buildbot a tummyache
+# note: can reduce length of buildslave dirs by adding "builddir="<shortname>" after "name=" on each BuilderConfig
+
+from buildbot.config import BuilderConfig
+c['builders']=[]
+
+c['builders'].append(
+    BuilderConfig(name="jessie-rtpreempt-amd64",
+      slavenames=["jessie-rtpreempt-amd64-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="jessie-rtpreempt-i386",
+      slavenames=["jessie-rtpreempt-i386-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="jessie-xenomai-amd64",
+      slavenames=["jessie-xenomai-amd64-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="jessie-xenomai-i386",
+      slavenames=["jessie-xenomai-i386-vm1"],
+      factory=ubcfactory,
+      category="production"))
+
+#c['builders'].append(
+#    BuilderConfig(name="precise-rtpreempt-amd64",
+#      slavenames=["precise-rtpreempt-amd64-vm1"],
+#      factory=ubcfactory,
+#      category="production"))
+#c['builders'].append(
+#    BuilderConfig(name="precise-rtpreempt-i386",
+#      slavenames=["precise-rtpreempt-i386-vm1"],
+#      factory=ubcfactory,
+#      category="production"))
+#c['builders'].append(
+#    BuilderConfig(name="precise-xenomai-amd64",
+#      slavenames=["precise-xenomai-amd64-vm1"],
+#      factory=ubcfactory,
+#      category="production"))
+#c['builders'].append(
+#    BuilderConfig(name="precise-xenomai-i386",
+#      slavenames=["precise-xenomai-i386-vm1"],
+#      factory=ubcfactory,
+#      category="production"))
+
+c['builders'].append(
+    BuilderConfig(name="raring-xenomai-amd64",
+      slavenames=["raring-xenomai-amd64-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="raring-xenomai-i386",
+      slavenames=["raring-xenomai-i386-vm1"],
+      factory=ubcfactory,
+      category="production"))
+#c['builders'].append(
+#    BuilderConfig(name="raring-rtpreempt-amd64",
+#      slavenames=["raring-rtpreempt-amd64-vm1"],
+#      factory=ubcfactory,
+#      category="production"))
+#c['builders'].append(
+#    BuilderConfig(name="raring-rtpreempt-i386",
+#      slavenames=["raring-rtpreempt-i386-vm1"],
+#      factory=ubcfactory,
+#      category="production"))
+
+c['builders'].append(
+    BuilderConfig(name="wheezy-xenomai-amd64",
+      slavenames=["wheezy-xenomai-amd64-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="wheezy-rtpreempt-amd64",
+      slavenames=["wheezy-rtpreempt-amd64-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="wheezy-xenomai-i386",
+      slavenames=["wheezy-xenomai-i386-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="wheezy-rtpreempt-i386",
+      slavenames=["wheezy-rtpreempt-i386-vm1"],
+      factory=ubcfactory,
+      category="production"))
+c['builders'].append(
+    BuilderConfig(name="wheezy-xenomai-armv7l",
+      slavenames=["wheezy-xenomai-armv7l-bbb1"],
+      factory=ubcfactory,
+      category="production"))
+
+####### STATUS TARGETS
+
+# 'status' is a list of Status Targets. The results of each build will be
+# pushed to these targets. buildbot/status/*.py has a variety to choose from,
+# including web pages, email senders, and IRC bots.
+# In this version, only WebStatus is used.
+# note: the docs make me believe I can use categories= here 
+#       but checkconfig disagrees???
+# note: adding "order_console_by_time=True" to WebStatus to make the 
+#       console view work (cf: trac.buildbot.net/wiki/FAQ) - sadly, does nothing for 
+#       forced builds but console view now displays git change info...pretty cool!
+
+c['status'] = []
+
+from buildbot.status import html
+from buildbot.status.web import authz, auth
+
+authz_cfg=authz.Authz(
+    # change any of these to True to enable; see the manual for more
+    # options
+    auth=auth.BasicAuth([(*name1*,*passwd1*),(*name2*,*passwd2*),(*name3*,*passwd3*)]),
+    gracefulShutdown = True,
+    forceBuild = 'auth', # use this to test your slave once it is set up
+    forceAllBuilds = True,
+    pingBuilder = True,
+    stopBuild = True,
+    stopAllBuilds = True,
+    cancelPendingBuild = True,
+)
+c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg, order_console_by_time=True))
+
+####### PROJECT IDENTITY
+
+# the 'title' string will appear at the top of this buildbot
+# installation's html.WebStatus home page (linked to the
+# 'titleURL') and is embedded in the title of the waterfall HTML page.
+
+c['title'] = "Unified Build Candidate"
+c['titleURL'] = "https://github.com/mhaberler"
+
+# the 'buildbotURL' string should point to the location where the buildbot's
+# internal web server (usually the html.WebStatus page) is visible. This
+# typically uses the port number set in the Waterfall 'status' entry, but
+# with an externally-visible host name which the buildbot cannot figure out
+# without some help.
+
+c['buildbotURL'] = "http://localhost:8009/"
+
+####### DB URL
+
+c['db'] = {
+    # This specifies what database buildbot uses to store its state.  You can leave
+    # this at its default for all but the largest installations.
+    'db_url' : "sqlite:///state.sqlite",
+}

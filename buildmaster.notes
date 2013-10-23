@@ -1,0 +1,91 @@
+NOTES on my buildmaster setup
+by Kent A Reed, 20131023
+
+1. On an appropriate host, install the buildmaster code.
+   This can be done easily from sources
+   (see http://www.buildbot.net for code and instructions)
+   and even more easily on Debian-based distros by invoking
+       # apt-get install buildbot
+   (must have root privileges so include that pesky "sudo"
+   if needed).
+   Note that there is buildmaster code available even for 
+   MS Windows.
+
+2. Create the buildmaster account.
+   If using a distro-provided package, then it's possible the user
+   "buildbot" has already been created. I choose instead to create
+   users "buildmaster" and "buildslave" as required. It's a matter
+   of taste.
+
+3. While not necessary for a single buildmaster, I create 
+   subdirectories in the buildmaster home directory for each 
+   buildmaster I'm running (maybe one for testing and one for 
+   production) even if there is only one to begin with. 
+   Let's say this one is ./ubc-buildbot.
+
+4. In the chosen subdirectory, as user "buildmaster" invoke
+       $ buildbot create-master
+   this will initialize the buildmaster with a set of files
+   and subdirectories.
+
+5. copy the ubc-master.cfg-sanitized file from this repo into the
+   chosen subdirectory, rename it "master.cfg", and unsanitize it,
+   e.g., restore passwords and usernames where appropriate.
+
+6. In the chosen subdirectory, as user "buildmaster", invoke
+       $ buildbot checkconfig
+   This will barf appropriately if it detects problems in the
+   master.cfg file. Among other things, I sanitize the file in such
+   a way that it should not pass muster unless it is properly
+   unsanitized.
+
+7. When the master.cfg file is clean, in the same chosen subdirectory,
+   as user "buildmaster" start up the buildmaster daemon
+       $ buildbot start
+   The ps command can be used at any time to confirm the daemon is 
+   running.
+   Note: the buildmaster should always run as a user process,
+         never root.
+   Note: new subdirectories will be created at this first start, one 
+         for each of the different builders.
+
+7a. If the buildmaster is already running when the master.cfg file is
+    modified, then one can invoke
+       $ buildbot reconfig
+    to update the buildmaster rather than having to stop it and
+    then start it.
+
+8. (this step actually should be done much earlier) Ensure the 
+   necessary ports are open on the host and firewall, if any. With my
+   configuration, these ports are 8010 for the buildbot webserver and
+   9989 for the buildslave communications.  Your mileage may vary.
+
+9. Check everything is ok by opening a browser to the buildbot web
+   server, e.g., localhost:8010 if on the same host, or else
+   http://<host>:8010 where <host> is your buildmaster host's FQDN 
+   or IP address. Preferably this test is performed on a different 
+   host outside the firewall if it's present.
+
+10. Finally, one typically wants the buildmaster daemon to startup
+    automatically when its host system boots. As is so often the 
+    case, there's more than one way to do this (see the buildbot docs). 
+    Since I installed my buildmaster from a .deb package, I take 
+    advantage of a script that was installed in init.d at the same 
+    time. This script takes its cue from /etc/default/buildmaster. Edit
+    this latter file appropriately. For reference, here is mine:
+
+$ cat /etc/default/buildmaster
+MASTER_RUNNER=/usr/bin/buildbot
+
+# NOTE: MASTER_ENABLED has changed its behaviour in version 0.8.4. Use
+# 'true|yes|1' to enable instance and 'false|no|0' to disable. Other
+# values will be considered as syntax error.
+
+MASTER_ENABLED[1]=1                    # 1-enabled, 0-disabled
+MASTER_NAME[1]="buildmaster #1"        # short name printed on start/stop
+MASTER_USER[1]="buildmaster"           # user to run master as
+MASTER_BASEDIR[1]="/home/buildmaster/ubc-buildbot" # basedir to master (absolute path)
+MASTER_OPTIONS[1]=""                   # buildbot options
+MASTER_PREFIXCMD[1]=""                 # prefix command, i.e. nice, linux32, dchroot
+
+11. Go have a beer.
