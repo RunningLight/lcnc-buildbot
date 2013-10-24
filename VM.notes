@@ -1,0 +1,39 @@
+NOTES on my virtual machines
+by Kent A Reed, 20131023
+
+Of course, one can run buildslaves on real machines but this quickly
+becomes cumbersome as more and more buildslaves for different distros,
+realtime kernels, and architectures are added.
+
+The answer lies in running the buildslaves and their host OSes on 
+virtual machines (no surprise there!).
+
+Some thoughts:
+
+1. I use libvirt tools such as virt-manager to create and maintain
+   VMs which I run in QEMU/KVM. The default system disk size offered
+   by virt-manager when creating a new VM is 8GB. This is more than
+   enough space to load up all the prerequisites and build LCNC. However,
+   it is totally inadequate for building a new realtime kernel (see, e.g.,
+   the Zultron instuctions on the LinuxCNC Wiki or 
+   https://github.com/zultron/debian-linuxcnc-autobuild). I have found
+   the minimum disk size to be something near 25GB so I round up to 
+   30GB when creating a VM for such a purpose. There's nothing more
+   frustrating than to run a build for hours only to have it die in 
+   its tracks because it's filled the disk with temporary files. 
+
+   Remember, too, that after a kernel build succeeds and the temporary
+   files have been flushed an additional 10GB-12GB will have been taken
+   up by the packages which were built, so don't try to run Zultron's
+   script to build all possibilities if you have limited disk space.
+
+2. Don't forget that you will want the VMs to start automatically when
+   their host system boots, so make the appropriate settings. This
+   includes making sure the grub configuration will start the 
+   appropriate kernel by default.
+
+3. I already pointed out in my buildslaves.notes that I find it 
+   advantageous to give each of my VMs a hostname which indicates the
+   buildslave it will be running.
+
+4. I don't know; it's late. Maybe I'll remember item 4 in the morning.
