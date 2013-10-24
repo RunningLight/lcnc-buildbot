@@ -1,0 +1,31 @@
+Initial thoughts
+by Kent A Reed, 20131023
+
+1. Generalize to building different branches.
+   - could define separate builders
+   - could use existing builders modified to
+     employ the property parameter
+   - either way, one should figure out a way to
+     display the results for different branches
+     in some organized way, preferably each to
+     its own waterfall page.
+   - in extremus, just run separate buildmasters
+
+2. Add a LCNC documentation builder
+   - a fly-in-the-ointment is the current inability
+     of the LCNC make process to create docs in 
+     recent distros. It seems to be an incompatibility
+     among asciidoc, tex, and various style files.
+     Until the problem is fixed,
+     one would have to create a buildslave on an
+     older distro such as Ubuntu/Lucid 10.04lts 
+     for the purpose of building documentation
+
+3. Add package builders
+
+4. Specialize and prettify the Web-page reports 
+   for LCNC builds.
+
+5. Map the Web-page reports into an existing web server 
+   instead of using its cut-down server listening to a 
+   special port.
