@@ -1,0 +1,187 @@
+NOTES on my buildslave configurations
+by Kent A Reed, 20131023
+
+First, a word about my builder/buildslave naming convention.
+
+   - For the builders, I concatenate tokens for the distro, the 
+     realtime kernel, and the architecture, e.g.,
+     "jessie-rtpreempt-i386" or "wheezy-xenomai-arm7l"
+     Tokens I've used so far are
+     distro: (Debian) wheezy, jessie, (Ubuntu) lucid, precise, raring
+     realtime kernel: rtpreempt, vanilla (e.g., no rt), xenomai
+     architecture: i386 (stands for all 32-bit x86 kernels), 
+                   amd64 (likewise for 64-bit), armv7l
+
+   - For the buildslaves, I've adopted a convention of concatenating 
+     a host# to the builder name, where the number is vm1, vm2, etc.,
+     for virtual machines and rm1, rm2, etc. for real machines. Hence, 
+     "wheezy-xenomai-i386-vm1" is the name of the first of possibly
+     several buildslaves on virtual hosts. This is all a matter
+     of taste. The buildbot doesn't care so long as it can connect
+     up a builder with a buildslave on which it is to run.
+
+   - For the hosts running the buildslaves, with a dozen or more 
+     virtual machines running and with a terminal window open to 
+     several, I find I can't easily keep track of which virtual 
+     machine belongs to which buildslave. I chose to name each host
+     according to the buildslave running on it. For example, I have 
+     a virtual machine with the hostname "wheezy-xenomai-amd64-vm1".
+
+1. Remember that each buildslave must be able to build whatever the
+   builder directs. For LCNC builds, this means installing all the
+   necessary prerequisites. I like to clone the linuxcnc repo into 
+   my home directory and try to build the builder target as a check
+   that I've installed whatever is needed. If this build fails due to
+   missing prerequisites, the builder will fail. Fix it.
+
+2. On each host intended as a buildslave, install the buildslave code.
+   This can be done easily from sources
+   (see http://www.buildbot.net for code and instructions)
+   and even more easily on Debian-based distros by invoking
+
+       # apt-get install buildbot
+
+   (must have root privileges so include that pesky "sudo"
+   if needed).
+
+3. Create the buildslave user account.
+   If using a distro-provided package, then it's possible the user
+   "buildbot" has already been created. I choose instead to create
+   users "buildmaster" and "buildslave" as required. It's a matter
+   of taste.
+
+4. In the buildslave home directory, as user "buildslave", invoke
+
+       $ buildslave create-slave [options] <basedir> <master> <name> <passwd>
+
+   where
+
+   <basedir> is the (relative) base directory for the buildslave---the
+   (absolute) base directory will be "/home/buildslave/<basedir>".
+
+   <master> is a fully qualified reference to the buildmaster host and port, 
+   for example, blitch.bletch.com:9989. An IP address can be used in
+   place of the fully qualified host name. The port specified must
+   match the port defined in the buildmaster master.cfg file. 
+
+   <name> is the name of the buildslave and must match exactly the name
+   given for it in the buildmaster's master.cfg file.
+
+   <passwd> is the password for the buildslave and must match exactly
+   the password given in the buildmaster's master.cfg file.
+
+   Finally, I haven't used the options, but I suppose -f and/or -r
+   could be useful. See the man page (or just ask buildslave for help).
+
+   If the buildslave creation is successful, you will see output like
+   the following
+
+-----
+$ buildslave create-slave <basedir> ...
+mkdir /home/buildslave/<basedir>
+chdir /home/buildslave/<basedir>
+mkdir /home/buildslave/<basedir>/info
+Creating info/admin, you need to edit it appropriately
+Creating info/host, you need to edit it appropriately
+Not creating info/access_uri - add it if you wish
+Please edit the files in /home/buildslave/<basedir>/info appropriately.
+buildslave configured in /home/buildslave/<basedir>
+-----
+
+   The file buildbot.tac created in <basedir> contains the critical 
+   bits and is worth some study to see what gets mapped to what. It can be
+   edited post facto if need be. 
+
+   The files info/admin and info/host should be edited to contain the 
+   name and email of the administrator (probably you, yes?) and a description
+   of the host, respectively. This information will be displayed. e.g., 
+   on the buildmaster's webpages.
+
+5. If this host is running a xenomai-based realtime kernel, then don't
+   forget to add user "buildslave" to the xenomai group.
+
+6. The buildsteps defined in my master.cfg require buildslaves to be able
+   to invoke certain privileged commands without being prompted for a passwd.
+   There may be another way to achieve this but here's what I did.
+
+   If the sudo command doesn't exist, e.g., because this is a Debian system,
+   then install the sudo package. You know how to do that by now, right?
+
+   As root, create a file /etc/sudoers.d/buildslave (use some other memorable
+   name if you wish). This file should contain the line
+
+   -----   
+   # cat /etc/sudoers.d/buildslave
+   buildslave ALL=(root) NOPASSWD: /bin/dmesg, /usr/bin/make
+   -----
+
+   For good security, this file should have the same permissions as the 
+   /etc/sudoers file, e.g., 
+
+-----
+# ls -l /etc/sudoers.d
+-r--r----- 1 root root  58 Oct  6 16:25 buildslave
+-r--r----- 1 root root 958 Aug 17 09:42 README
+-----
+
+7. User buildslave should log out and log in again to make sure the 
+   permissions are set.
+
+8. Make sure the buildslave can reach the buildmaster. At the very 
+   least, check that you can ping from the buildmaster host from the
+   buildslave. This is not necessarily a sufficient test if there are
+   complex rules in play in any intervening firewalls.
+
+9. In the buildslave <basedir>, e.g., the directory containing the buildbot.tac
+   file, as user "buildslave", start the buildslave daemon
+
+   $ buildslave start
+
+   (If starting it from some other working directory, then use the <basedir>
+   option.)
+
+   The ps command can be used at any time to see if the daemon is running.
+
+   If all is well, you will see output similar to the following
+
+-----
+$ buildslave start
+Following twistd.log until startup finished..
+2013-10-23 21:44:59-0400 [-] Log opened.
+2013-10-23 21:44:59-0400 [-] twistd 13.0.0 (/usr/bin/python 2.7.5) starting up.
+2013-10-23 21:44:59-0400 [-] reactor class: twisted.internet.epollreactor.EPollReactor.
+2013-10-23 21:44:59-0400 [-] Starting BuildSlave -- version: 0.8.7p1
+2013-10-23 21:44:59-0400 [-] recording hostname in twistd.hostname
+2013-10-23 21:44:59-0400 [-] Starting factory <buildslave.bot.BotFactory instance at 0x9ebd7ac>
+2013-10-23 21:44:59-0400 [-] Connecting to 192.168.1.10:9989
+2013-10-23 21:44:59-0400 [Broker,client] message from master: attached
+The buildslave appears to have (re)started correctly.
+-----
+
+   If the buildslave fails to start, you will see appropriate messages.
+
+10. Finally, one usually wants the buildslave to start up automatically when 
+    its host system boots. As is so often the case, there's more than one way
+    to do this (see the buildbot docs).  Since I installed my buildmaster 
+    from a .deb package, I take advantage of a script that was installed in 
+    init.d at the same time. This script takes its cue from 
+    /etc/default/buildslave. Edit this latter file appropriately. 
+
+    For reference, here is one of mine: 
+
+---
+# cat /etc/default/buildslave
+SLAVE_RUNNER=/usr/bin/buildslave
+
+# NOTE: SLAVE_ENABLED has changed its behaviour in version 0.8.4. Use
+# 'true|yes|1' to enable instance and 'false|no|0' to disable. Other
+# values will be considered as syntax error.
+
+SLAVE_ENABLED[1]=1                    # 1-enabled, 0-disabled
+SLAVE_NAME[1]="buildslave #1"         # short name printed on start/stop
+SLAVE_USER[1]="buildslave"              # user to run slave as
+SLAVE_BASEDIR[1]="/home/buildslave/jessie-xenomai-i386"  # basedir to slave (absolute path)
+SLAVE_OPTIONS[1]=""                   # buildbot options
+SLAVE_PREFIXCMD[1]""                  # prefix command, i.e., nice, linux32, dchroot
+-----
+
