@@ -36,4 +36,10 @@ Some thoughts:
    advantageous to give each of my VMs a hostname which indicates the
    buildslave it will be running.
 
-4. I don't know; it's late. Maybe I'll remember item 4 in the morning.
+4. The libvirt tools set up a virtual network for the VMs. Several
+   approaches are offered for communicating between the virtual network
+   and the rest of the world. A copy of dnsmasq is set up to run on the
+   host system and service the VMs. If there is a firewall running on
+   the host system, some fiddling may be required to get everything
+   communicating properly since the virtual network will appear to be
+   yet another network to it. 
