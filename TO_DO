@@ -1,10 +1,12 @@
 Initial thoughts
 by Kent A Reed, 20131023
+amend - 20131025
 
 1. Generalize to building different branches.
    - could define separate builders
    - could use existing builders modified to
-     employ the property parameter
+     employ property, branch, and/or 
+     project parameters as needed
    - either way, one should figure out a way to
      display the results for different branches
      in some organized way, preferably each to
@@ -16,10 +18,13 @@ by Kent A Reed, 20131023
      of the LCNC make process to create docs in 
      recent distros. It seems to be an incompatibility
      among asciidoc, tex, and various style files.
-     Until the problem is fixed,
-     one would have to create a buildslave on an
-     older distro such as Ubuntu/Lucid 10.04lts 
-     for the purpose of building documentation
+     Until the problem is fixed, one would have to 
+     create a buildslave on an older distro such as 
+     Ubuntu/Lucid 10.04lts for the purpose of building
+     documentation
+   - it probably makes sense to add this buildslave to
+     a separate builder and scheduler triggered only by 
+     changes in the ./docs directory
 
 3. Add package builders
 
@@ -29,3 +34,7 @@ by Kent A Reed, 20131023
 5. Map the Web-page reports into an existing web server 
    instead of using its cut-down server listening to a 
    special port.
+ - on further thought, this probably should be
+   done using reverse proxy on the site's existing, 
+   outward-facing http server. Port 8010 can then be 
+   closed on the firewall.
