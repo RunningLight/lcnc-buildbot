@@ -1,5 +1,6 @@
 NOTES on my virtual machines
 by Kent A Reed, 20131023
+amended 20131026
 
 Of course, one can run buildslaves on real machines but this quickly
 becomes cumbersome as more and more buildslaves for different distros,
@@ -28,9 +29,39 @@ Some thoughts:
    script to build all possibilities if you have limited disk space.
 
 2. Don't forget that you will want the VMs to start automatically when
-   their host system boots, so make the appropriate settings. This
-   includes making sure the grub configuration will start the 
-   appropriate kernel by default.
+   their host system boots, so make the appropriate settings. 
+
+   On the host system, set the VMs to autostart. There's more than one
+   way to do that, including using virsh (cli) or virt-manager (window). 
+   See the appropriate documentation. Be sure to test the settings
+   are correct by rebooting the host and checking the VMs booted.
+
+   On the VMs, make sure the grub configuration will start the 
+   appropriate kernel by default. On Debian-based systems, one edits
+   /etc/default/grub to change the GRUB_DEFAULT line appropriately,
+   then runs update-grub for the change to take effect.
+
+   This can get complicated. On many of my systems, the desired kernel
+   appears in a secondary grub menu which typically is named "Previous
+   Linux versions" and this has to be taken into account. Suppose the 
+   secondary menu is the third entry in the primary menu and suppose 
+   the desired kernel,named "Ubuntu, with Linux 3.5.7-xenomai-2.6.2.1", 
+   is the second entry in the secondary menu. It is possible to use the 
+   entry positions in the menus (counting from zero) to choose this kernel 
+   to boot by default by setting
+
+   GRUB_DEFAULT=2>1. 
+
+   However, update-grub may move these entries up and down in the menus, 
+   so I highly recommend name the selections in /etc/default/grub. 
+   For the example entries above, the same line now reads
+  
+   GRUB_DEFAULT="Previous Linux versions>Ubuntu, with Linux 3.5.7-xenomai-2.6.2.1"
+   
+   Don't forget to run update-grub when done and don't forget to test that
+   (re)booting works as intended before walking away. For example, any
+   spelling or capitalization mistake will result in grub booting the old
+   default kernel. As well, there can't be spaces either side of ">".
 
 3. I already pointed out in my buildslaves.notes that I find it 
    advantageous to give each of my VMs a hostname which indicates the
