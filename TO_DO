@@ -1,6 +1,6 @@
 Initial thoughts
 by Kent A Reed, 20131023
-amend - 20131025
+amend - 20131102
 
 1. Generalize to building different branches.
    - could define separate builders
@@ -10,7 +10,11 @@ amend - 20131025
    - either way, one should figure out a way to
      display the results for different branches
      in some organized way, preferably each to
-     its own waterfall page.
+     its own waterfall page. NOTE- now that I know
+     how to run behind a reverse proxy this becomes
+     easy, just use, e.g.,  categories and/on branches
+     in the links from the home page to display 
+     just the portions of the waterfall desired.
    - in extremus, just run separate buildmasters
 
 2. Add a LCNC documentation builder
@@ -31,7 +35,8 @@ amend - 20131025
 4. Specialize and prettify the Web-page reports 
    for LCNC builds.
 
-5. Map the Web-page reports into an existing web server 
+5. [DONE - will post configuration files RSN]
+   Map the Web-page reports into an existing web server 
    instead of using its cut-down server listening to a 
    special port.
  - on further thought, this probably should be
