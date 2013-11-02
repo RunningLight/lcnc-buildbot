@@ -12,7 +12,8 @@ amend - 20131102
      in some organized way, preferably each to
      its own waterfall page. NOTE- now that I know
      how to run behind a reverse proxy this becomes
-     easy, just use, e.g.,  categories and/on branches
+     easy, either on a remote page or on the local home
+     page; just use, e.g.,  categories and/on branches
      in the links from the home page to display 
      just the portions of the waterfall desired.
    - in extremus, just run separate buildmasters
