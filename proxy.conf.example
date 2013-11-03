@@ -1,0 +1,40 @@
+<IfModule mod_proxy.c>
+
+# If you want to use apache2 as a forward proxy, uncomment the
+# 'ProxyRequests On' line and the <Proxy *> block below.
+# WARNING: Be careful to restrict access inside the <Proxy *> block.
+# Open proxy servers are dangerous both to your network and to the
+# Internet at large.
+#
+# If you only want to use apache2 as a reverse proxy/gateway in
+# front of some web application server, you DON'T need
+# 'ProxyRequests On'.
+
+#ProxyRequests On
+
+# edit default proxy.conf
+# 1. change <Proxy *> stanza to allow access
+# 2. add ProxyPass/ProxyPassReverse directives to
+#    enable reverse proxy to the BuildBot WebServer 
+#    listening to port 8010 on http://my-host.net 
+# KAR - 20131102
+
+<Proxy *>
+        AddDefaultCharset off
+        Order deny,allow
+        Allow from all
+</Proxy>
+
+# Enable/disable the handling of HTTP/1.1 "Via:" headers.
+# ("Full" adds the server version; "Block" removes all outgoing Via: headers)
+# Set to one of: Off | On | Full | Block
+#ProxyVia Off
+
+# Configure reverse proxy requests
+
+ProxyPass /default.css http://my-host.net:8010/default.css
+ProxyPass /favicon.ico http://my-host.net:8010/favicon.ico
+ProxyPass /buildbot/ http://my-host.net:8010/
+ProxyPassReverse /buildbot/ http://my-host.net:8010/
+
+</IfModule>
