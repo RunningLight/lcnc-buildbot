@@ -1,0 +1,93 @@
+Kent A Reed, 20121103
+
+
+The buildbot.status.html.WebStatus status target runs a 
+small web server inside the buildmaster. In the example 
+buildbot master.cfg file, this web server listens on
+port 8010 of the localhost. The port number is chosen
+to not conflict with the default http port 80 for two
+reasons. The host may be running a regular web server
+and the buildbot server is too limited in capability
+to substitute for it.
+
+While this configuration works, it has two undersirable
+consequences: the chosen port must be opened on the 
+firewall and users must get used to addressing that port 
+to reach the WebStatus home page.
+
+Typically a public-facing web server such as apache2 
+is already running on the local host or at least 
+in the local network. One can run a reverse proxy on this 
+server to reach the buildbot's WebStatus service. This 
+allows access to the buildbot with only port 80 open 
+on the firewall, and, if desired, allows the buildbot 
+status information to be comingled in a natural way with 
+other site information.
+
+Here's how to make this work using the reverse proxy
+capability in apache2. Other web servers such as nginx
+also provide reverse proxy capability.
+
+The following assumes the underlying O/S is a recent
+version of Debian or Ubuntu. The configuration files
+for apache2 on these systems differ from the standard
+Apache arrangement.
+
+Suppose the WebService is running on port 8010 of the
+localhost, say, http://<buildbot-FQDN>:8010
+
+Suppose the home page of the apache2 webserver is 
+http://<webserver-FQDN>/
+
+A. Suppose one wishes to access the buildbot WebStatus 
+   home page as if it were an integral part of the 
+   webserver, say, http://<webserver-FQDN>/buildbot/
+   Note: The choice of name is arbitrary but be consistent
+   throughout.
+   Note: It should be obvious one can create pages
+   on the existing webserver which discuss and link
+   to  various buildbot WebStatus resources.
+
+A1) As the buildmaster user, edit the buildmaster's 
+    configuration file master.cfg to adjust buildbotURL,
+    e.g.,
+
+    c['buildbotURL'] = "http://<buildbot-FQDN>:8010/buildbot/"
+
+A2) Still as buildmaster user, run 'buildbot checkconfig'
+    just to be sure and then run 'buildbot reconfig' to 
+    restart the buildbot with the WebStatus servr properly
+    configured.
+
+A3) (for recent Debian/Ubuntu distros) Ensure the
+    proxy module and proxy_http module are installed in
+    /etc/apache2/mods-available. My experience has been
+    that these modules, along with many others, are
+    installed when I install apache2 from Ubuntu or Debian
+    distros.
+
+A4) As user root, edit proxy.conf to set up the reverse 
+    proxy. A sample proxy.conf file is included in this
+    repo. The ProxyPass and ProxyPassReverse directives
+    are used to enable the flow of requests and responses
+    between the servers. 
+
+A5) As user root, enable the proxy and proxy_http modules 
+    by setting symbolic links {proxy,proxy_http}.conf and 
+    {proxy,proxy_http}.load in etc/apache2/mods-enabled
+    pointing back to the counterpart .conf and .load 
+    files in etc/apache2/mods-available. This task is made 
+    easier by executing the utility a2enmod and answering 
+    the ensuing question.
+
+A6) Restart the apache2 server, for example, by executing
+    'service apache2 restart' as root.
+
+A7) Test the new configuration by pointing a web browser to
+    http://<webserver-FQDN>/builbot and exercising through all
+    the links.
+ 
+B. Alternatively, one may wish to access the server
+   as a virtual host, say, http://buildbot.<server-FQDN>
+   I haven't needed this style of access so haven't worked
+   out the details. 
