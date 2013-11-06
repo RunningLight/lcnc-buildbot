@@ -1,6 +1,6 @@
 NOTES on my virtual machines
 by Kent A Reed, 20131023
-amended 20131026
+amended 20131106
 
 Of course, one can run buildslaves on real machines but this quickly
 becomes cumbersome as more and more buildslaves for different distros,
@@ -27,6 +27,21 @@ Some thoughts:
    files have been flushed an additional 10GB-12GB will have been taken
    up by the packages which were built, so don't try to run Zultron's
    script to build all possibilities if you have limited disk space.
+
+   As for VM memory, I had been accepting the default 1024MB offered by
+   virt-manager. This size has worked well enough building UBC3 on all
+   my VMs so far *except* jessie-{rtpreempt|xenomai}-amd64. On these 
+   two VMs, the make process was failing with the following ominous 
+   message at the end
+
+    "g++: internal compiler error: Killed (program cc1plus)
+     Please submit a full bug report,
+     with preprocessed source if appropriate.
+     See <file:///usr/share/doc/gcc-4.8/README.Bugs> for instructions."
+
+   Actually, the machine is running out of memory during the make process. 
+   Increasing the VM memory to 1280MB allowed the build to run to
+   completion and successfully execute runtsts on these two VMs.
 
 2. Don't forget that you will want the VMs to start automatically when
    their host system boots, so make the appropriate settings. 
