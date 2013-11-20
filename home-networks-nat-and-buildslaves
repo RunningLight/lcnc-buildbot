@@ -1,0 +1,38 @@
+Kent A Reed, 20131120
+
+Typically, we folks at home are running private networks in the
+parlance of the IANA (see http://wikipediea.org/wiki/Private_network;
+also RFC 1918). A single public IP address is assigned to us by
+our ISP. A local router has the job of translating our private IP addresses
+to public IP addresses and v.v. through the process of Network Address
+Port Translation (NAPT; see 
+http://wikipedia.org/wiki/Network_address_translation). The result is that 
+we can run multiple hosts on our local network with each seemingly 
+connected directly to the Internet.
+
+NAT is a complicated business. The method used in Buildbot code to 
+establish intercommunication between a buildmaster and its buildslaves
+would appear to be immune to NAT but just to be sure I tried the following
+experiment:
+
+1. Run a remote buildmaster on a host in Austria.
+2. Run three local buildslaves on my hosts here in Maryland.
+   a. One buildslave is running on a Beaglebone Black.
+   b. Two buildslaves are running on virtual Debian machines hosted
+      on a Debian machine. 
+   c. The three buildslave hosts have private IP addresses in the 
+      192.168.1 subnet (just to add to the jollies, the two VMs have 
+      private IP addresses in the 192.168.122 subnet with routing to the 
+      local 192.168.1 subnet handled by their VM manager).
+   c. The three buildslaves are configured to "phone home" to the
+      remote buildmaster and the buildmaster is configured to 
+      recognize them.
+
+Result:
+
+The buildmaster is perfectly happy. The buildslave results appear in the
+waterfall display and builders can initiate builds on them.
+
+Conclusion:
+
+Find something else to worry about.
